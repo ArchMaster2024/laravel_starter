@@ -2,14 +2,18 @@
 
 namespace App\Commands;
 
-use App\Contracts\ProcessesManager;
-use App\Services\Linux\TaskManager;
+// use App\Contracts\ProcessesManager;
+// use App\Services\Linux\TaskManager;
+use App\Services\LaravelInstaller;
+// use App\Contracts\ProjectMaker;
+use App\Services\ProjectMakerContext;
+use App\Services\Linux\MonolitProjectMaker;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
 
 use function Laravel\Prompts\text;
 use function Laravel\Prompts\note;
-use function Laravel\Prompts\error;
+use function Laravel\Prompts\info;
 use function Laravel\Prompts\select;
 
 class ProjectStart extends Command
@@ -28,7 +32,7 @@ class ProjectStart extends Command
      */
     protected $description = 'Start a new Laravel Project';
 
-    public function __construct(private ProcessesManager $process, private TaskManager $taskManager)
+    public function __construct(private readonly LaravelInstaller $laravelInstaller, private readonly MonolitProjectMaker $monolitProject, private ProjectMakerContext $projectContext)
     {
         parent::__construct();
     }
@@ -43,10 +47,8 @@ class ProjectStart extends Command
         if ($projectLocation == '.') {
             // TODO: Write project in actual directory
         }
-        $installLaravel = $this->task('Installing Laravel', fn () => $this->taskManager->simpleSynchronousTask("composer create-project laravel/laravel $projectLocation"));
-        if ($installLaravel != true) {
-            error('An error occurred when trying to install the basic Laravel structure');
-        }
+        $this->laravelInstaller->install($projectLocation, $this);
+        info("By default Laravel come with PHPUnit test library");
         $scaffolding = select(label: 'Directory scaffolding', options: ['API', 'Monolit']);
         switch ($scaffolding) {
             case 'API':
@@ -54,31 +56,9 @@ class ProjectStart extends Command
                 note('API');
                 break;
             case 'Monolit':
-                $testingFramework = select(label: 'What testing framewrok do you prefer?', options: ['Unit', 'Pest']);
-                if ($testingFramework == 'Pest') {
-                    $removePHPUnit = $this->task('Removing PHPUnit', fn () => $this->taskManager->taskInSelectedLocation('composer remove phpunit/phpunit', $projectLocation));
-                    if ($removePHPUnit != true) {
-                        error('An error occurred when trying to remove PHPUnit library');
-                    }
-                    $installPest = $this->task('Installing Pest', function () use ($projectLocation) {
-                        $pestInstalled = $this->taskManager->taskInSelectedLocation('composer require pestphp/pest --dev --with-all-dependencies', $projectLocation);
-                        if ($pestInstalled != true) {
-                            error('An error occurred when trying to install Pest PHP');
-                            return false;
-                        }
-                        $pestInitialize = $this->taskManager->taskInSelectedLocation('./vendor/bin/pest --init', $projectLocation);
-                        if ($pestInitialize != true) {
-                            error('An error occurred when trying to initialize Pest PHP');
-                            return false;
-                        }
-                        $pestTesting = $this->taskManager->taskInSelectedLocation('./vendor/bin/pest', $projectLocation);
-                        if ($pestTesting != true) {
-                            error('An error occured when trying to testing Pest PHP');
-                            return false;
-                        }
-                        return true;
-                    });
-                }
+                // TODO: Write Monolit scaffolding flow
+                $this->projectContext->setProjectMakerStrategy($this->monolitProject);
+                $this->projectContext->runProjectMakerBusinessLogic('Monolit', $projectLocation);
                 break;
             default:
                 error('HaHa you try hack my app, but I\'m more smart than you and I get ahead of your response');
