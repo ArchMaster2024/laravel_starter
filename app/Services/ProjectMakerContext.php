@@ -50,7 +50,7 @@ class ProjectMakerContext
                         ],
                     ],
                     'Jetstream' => [
-                        'steps' => 5,
+                        'steps' => 2,
                         'commands' => [
                             'composer require laravel/jetstream',
                             [
@@ -81,20 +81,13 @@ class ProjectMakerContext
                 ],
             ],
             [
-                'type' => 'select',
-                'label' => 'Select your testing framework',
-                'options' => [
-                    'PHPUnit' => true,
-                    'Pest' => [
-                        'steps' => 4,
-                        'commands' => [
-                            'composer remove phpunit/phpunit --dev',
-                            'composer require pestphp/pest --dev --with-all-dependencies',
-                            './vendor/bin/pest --init',
-                            './vendor/bin/pest',
-                        ],
-                    ],
-                    'None' => [],
+                'type' => 'one',
+                'label' => 'Do you like to install Pest for replace to PHPUnit?',
+                'commands' => [
+                    'composer remove phpunit/phpunit --dev',
+                    'composer require pestphp/pest --dev --with-all-dependencies',
+                    './vendor/bin/pest --init',
+                    './vendor/bin/pest',
                 ],
             ],
             [
@@ -113,7 +106,6 @@ class ProjectMakerContext
                             'npm install @inertiajs/vue3@next',
                         ],
                     ],
-                    'Blade' => true,
                     'None' => [],
                 ],
             ],

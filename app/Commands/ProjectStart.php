@@ -32,7 +32,11 @@ class ProjectStart extends Command
      */
     protected $description = 'Start a new Laravel Project';
 
-    public function __construct(private readonly LaravelInstaller $laravelInstaller, private readonly MonolitProjectMaker $monolitProject, private ProjectMakerContext $projectContext)
+    public function __construct(
+        private readonly LaravelInstaller $laravelInstaller,
+        private readonly MonolitProjectMaker $monolitProject,
+        private ProjectMakerContext $projectContext
+    )
     {
         parent::__construct();
     }
@@ -48,7 +52,6 @@ class ProjectStart extends Command
             // TODO: Write project in actual directory
         }
         $this->laravelInstaller->install($projectLocation, $this);
-        info("By default Laravel come with PHPUnit test library");
         $scaffolding = select(label: 'Directory scaffolding', options: ['API', 'Monolit']);
         switch ($scaffolding) {
             case 'API':
@@ -56,7 +59,6 @@ class ProjectStart extends Command
                 note('API');
                 break;
             case 'Monolit':
-                // TODO: Write Monolit scaffolding flow
                 $this->projectContext->setProjectMakerStrategy($this->monolitProject);
                 $this->projectContext->runProjectMakerBusinessLogic('Monolit', $projectLocation);
                 break;

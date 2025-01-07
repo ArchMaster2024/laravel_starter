@@ -28,6 +28,7 @@ class ProcessManager implements ProcessesManager
      */
     public function interactWithSystem(string $command): ProcessResult
     {
+        // HACK: This line require revision beacuse this smell weird
         return Process::forever()->tty()->run($command);
     }
 

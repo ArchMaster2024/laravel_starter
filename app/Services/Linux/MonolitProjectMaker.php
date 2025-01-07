@@ -75,8 +75,9 @@ class MonolitProjectMaker implements ProjectMaker
                                 $this->taskManager->taskInSelectedLocation($arrayToManipulate[$secondLevelOptionToInstall], $location);
                                 break;
                             }
+                        } else {
+                            $this->taskManager->taskInSelectedLocation($dependencies['commands'][$i], $location);
                         }
-                        $this->taskManager->taskInSelectedLocation($dependencies['commands'][$i], $location);
                     }
                 }
             }
