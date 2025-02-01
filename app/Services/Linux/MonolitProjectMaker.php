@@ -8,21 +8,19 @@ use function Laravel\Prompts\select;
 
 class MonolitProjectMaker implements ProjectMaker
 {
-    public function __construct(private readonly TaskManager $taskManager)
+    private array $dependencyMethods = [
+        'one' => 'processOneTypeDependency',
+        'select' => 'processSelectTypeDependency',
+    ];
+
+    public function __construct(private readonly TaskManager $taskManager) {}
+
+    public function execute(array $dependencies, string $projectName): void
     {
-    }
-    public function execute(array $librariesToInstall, string $projectLocation): void
-    {
-        if (is_array($librariesToInstall) && count($librariesToInstall) > 0) {
-            foreach($librariesToInstall as $libraryConfig) {
-                switch ($libraryConfig['type']) {
-                    case 'select':
-                        $this->processSelectTypeDependency($libraryConfig, $projectLocation);
-                        break;
-                    case 'one':
-                        $this->processOneTypeDependency($libraryConfig, $projectLocation);
-                        break;
-                }
+        foreach($dependencies as $dependency) {
+            $method = $this->dependencyMethods[$dependency['type']] ?? null;
+            if ($method) {
+                $this->$method($dependency, $projectName);
             }
         }
     }
