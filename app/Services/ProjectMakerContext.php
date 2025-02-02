@@ -77,7 +77,7 @@ class ProjectMakerContext
                             'php artisan filament:install --panels',
                         ],
                     ],
-                    'Custom' => true,
+                    'Custom' => 'Custom',
                 ],
             ],
             [
@@ -106,7 +106,7 @@ class ProjectMakerContext
                             'npm install @inertiajs/vue3@next',
                         ],
                     ],
-                    'None' => [],
+                    'None' => 'None',
                 ],
             ],
             [
