@@ -2,19 +2,12 @@
 
 namespace App\Commands;
 
-// use App\Contracts\ProcessesManager;
-// use App\Services\Linux\TaskManager;
-use App\Services\LaravelInstaller;
-// use App\Contracts\ProjectMaker;
-use App\Services\ProjectMakerContext;
-use App\Services\Linux\MonolitProjectMaker;
+use App\Core\Services\DependencyInstaller;
+use App\Core\Services\LaravelInstaller;
 use Illuminate\Console\Scheduling\Schedule;
 use LaravelZero\Framework\Commands\Command;
 
-use function Laravel\Prompts\text;
-use function Laravel\Prompts\note;
-use function Laravel\Prompts\info;
-use function Laravel\Prompts\select;
+use function Laravel\Prompts\error;
 
 class ProjectStart extends Command
 {
@@ -23,7 +16,7 @@ class ProjectStart extends Command
      *
      * @var string
      */
-    protected $signature = 'create-project';
+    protected $signature = 'create-proyect';
 
     /**
      * The console command description.
@@ -33,39 +26,45 @@ class ProjectStart extends Command
     protected $description = 'Start a new Laravel Project';
 
     public function __construct(
-        private readonly LaravelInstaller $laravelInstaller,
-        private readonly MonolitProjectMaker $monolitProject,
-        private ProjectMakerContext $projectContext
-    )
-    {
+        private laravelInstaller $laravelInstaller,
+        private DependencyInstaller $dependencies
+    ){
         parent::__construct();
     }
+
 
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle()
     {
-        $projectLocation = text(label: 'Project name', placeholder: 'Awesome_project', hint: 'If you write \'.\' we create project in current directory');
-        // NOTE: We start with the flow if the user write the name of a project
-        if ($projectLocation == '.') {
-            // TODO: Write project in actual directory
+        info('Welcome to laravel starter');
+
+        $this->task('Instaling Laravel', function () use(&$result): bool {
+            $result = $this->laravelInstaller->install();
+            return $result->isSuccess();
+        });
+
+        if($result->isFailure()){
+            error('An error has occurred');
+            error('Here is more information about the failure:');
+            error($result->getContent());
+
+            return self::FAILURE;
         }
-        $this->laravelInstaller->install($projectLocation, $this);
-        $scaffolding = select(label: 'Directory scaffolding', options: ['API', 'Monolit']);
-        switch ($scaffolding) {
-            case 'API':
-                // TODO: Write API scaffolding flow
-                note('API');
-                break;
-            case 'Monolit':
-                $this->projectContext->setProjectMakerStrategy($this->monolitProject);
-                $this->projectContext->runProjectMakerBusinessLogic('Monolit', $projectLocation);
-                break;
-            default:
-                error('HaHa you try hack my app, but I\'m more smart than you and I get ahead of your response');
-                break;
-        }
+
+        $data = $result->getContent();
+
+        $dependencies = $data->options;
+        $directory = $data->projectName;
+
+        $this->task('Installing aditional libraries', function () use($dependencies, $directory) : bool {
+            $this->dependencies->choose($dependencies);
+            $this->dependencies->onDirectory($directory)->install();
+            return false;
+        });
+
+
     }
 
     /**
