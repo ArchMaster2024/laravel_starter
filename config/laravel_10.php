@@ -6,9 +6,7 @@ return [
         'type' => 'select',
         'label' => 'Select your scaffolding',
         'options' => [
-            'API' => [
-                'commands' => ['php artisan  install:api']
-            ],
+            'API' => null,
             'Monolit' => [
                 'type' => 'select',
                 'label' => 'Select your starter kit',
@@ -98,11 +96,7 @@ return [
                         'composer require "maatwebsite/excel:^3.1"',
                         'php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider" --tag=config'
                     ]
-                ],
-                'Laravel Reverb' => [
-                    'php artisan install:broadcasting'
                 ]
-
             ]
         ]
     ],
