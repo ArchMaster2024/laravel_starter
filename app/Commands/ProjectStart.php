@@ -58,13 +58,19 @@ class ProjectStart extends Command
         $dependencies = $data->options;
         $directory = $data->projectName;
 
-        $this->task('Installing aditional libraries', function () use($dependencies, $directory) : bool {
+        $this->task('Installing aditional libraries', function () use($dependencies, $directory, &$result) : bool {
             $this->dependencies->choose($dependencies);
-            $this->dependencies->onDirectory($directory)->install();
-            return false;
+            $result = $this->dependencies->onDirectory($directory)->install();
+            return $result->isSuccess();
         });
 
+        if($result->isFailure()){
+            error('An error has occurred');
+            error('Here is more information about the failure:');
+            error($result->getContent());
 
+            return self::FAILURE;
+        }
     }
 
     /**

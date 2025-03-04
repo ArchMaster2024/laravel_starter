@@ -2,13 +2,15 @@
 
 namespace App\Core\Handlers;
 
-class DependenciesContainer {
+class DependenciesContainer
+{
     public function __construct(
         private readonly array $pendingDependencies,
         private array $selectedDependencies = []
-    ){}
+    ) {}
 
-    public function __invoke(){
+    public function __invoke()
+    {
 
 
         $this->handle($this->pendingDependencies);
@@ -16,30 +18,26 @@ class DependenciesContainer {
         return $this->selectedDependencies;
     }
 
-    private function handle($dependencies){
-        if(array_key_exists('type', $dependencies)){
-            if($dependencies['type'] === 'select'){
-                $input = new Input();
-                $result = $input->select($dependencies['label'], $dependencies['options']);
-                $this->createNewContainer($result->option);
-            }
-            return;
-        }
-
-
-        if(array_key_exists('commands', $this->pendingDependencies)){
+    private function handle($dependencies)
+    {
+        if (array_key_exists('commands', $this->pendingDependencies)) {
             $this->addDependencies($this->pendingDependencies['commands']);
-            return;
         }
 
-        foreach($this->pendingDependencies as $container){
+        if (array_key_exists('type', $dependencies)) {
+            $this->handleInput($dependencies);
+        }
+
+
+        foreach ($this->pendingDependencies as $key => $container) {
+            if(!is_int($key)) continue;
             $this->createNewContainer($container);
         }
-
     }
 
-    private function createNewContainer(array $dependencies): void
+    private function createNewContainer(array | null $dependencies): void
     {
+        if(empty($dependencies)) return;
         $dependenciesContainer = new DependenciesContainer($dependencies);
 
         $selectedDependencies = $dependenciesContainer();
@@ -52,5 +50,24 @@ class DependenciesContainer {
             $this->selectedDependencies,
             $dependencies
         );
+    }
+
+    private function handleInput(array $dependencies)
+    {
+        $input = new Input();
+        $type = $dependencies['type'];
+
+        if($type === 'choice' || $type === 'select') {
+            $result = $input->$type($dependencies['label'], $dependencies['options']);
+            $this->createNewContainer($result->option);
+            return;
+        }
+
+        $isConfirmed = $input->confirm($dependencies['label']);
+        if($isConfirmed){
+            $this->createNewContainer($dependencies['options']['yes']);
+        } else {
+            $this->createNewContainer($dependencies['options']['no']);
+        }
     }
 }
